@@ -4,90 +4,89 @@
 
 ---
 
-## Overview
+## Why I Built This
 
-The **Cloud Operations Control Plane** is an internal, platform-style system built on AWS to improve **governance, operational hygiene, cost control, and visibility** across cloud infrastructure.
+In most real AWS environments, the hard part isn’t *creating* resources — it’s **knowing what exists, what it’s costing, and whether it’s still needed**.
 
-This project mirrors how **real CloudOps and Platform Engineering teams** build lightweight internal tooling to manage growing AWS environments.
+I built the **Cloud Operations Control Plane** to simulate the kind of **internal tooling** CloudOps and Platform Engineering teams rely on to keep cloud environments **visible, governed, and under control**.
 
-🔹 This is **not an application**.
-🔹 It is an **operations platform**.
-
----
-
-## What Problem This Solves
-
-As AWS environments scale, teams commonly face:
-
-* Lack of visibility into deployed resources
-* Orphaned resources causing silent cost leaks
-* Manual, reactive operational workflows
-* Weak governance and auditability
-
-This control plane provides a **safe, automated foundation** to address these problems.
+This is **not an application**.
+It’s a **cloud operations platform**.
 
 ---
 
-## High-Level Architecture
+## The Problem This Solves
+
+As cloud usage grows, teams commonly run into:
+
+* Limited visibility into deployed AWS resources
+* Orphaned EBS volumes and snapshots causing silent cost leaks
+* Manual, ad-hoc operational checks
+* Weak audit trails for governance decisions
+
+This project introduces a **safe, automated foundation** to address those operational gaps.
+
+---
+
+## How It Works (High Level)
 
 ```
-EventBridge (Schedule)
+EventBridge (Scheduled)
         │
         ▼
 AWS Lambda (Inventory & Hygiene)
         │   IAM (Least Privilege)
         ▼
-Amazon S3 (Versioned Reports)
-        │
-        ▼
-Future Consumers
-(Governance, Cost, Dashboards, Alerts)
+Amazon S3 (Versioned JSON Reports)
 ```
 
-**Key design choices:**
+**Flow explained simply:**
 
-* Fully serverless (no EC2, no cron)
-* Least-privilege IAM
-* Read-only, detection-first automation
-* Durable, auditable S3 storage
+* EventBridge runs the checks on a schedule
+* Lambda collects inventory and hygiene data
+* S3 stores the results as durable, auditable JSON reports
 
----
-
-## What Is Implemented
-
-### Phase 1 – Governance & Inventory ✅
-
-* Terraform-based AWS foundation with remote state & locking
-* IAM + STS assume-role access model
-* Scheduled inventory collection using **Lambda + EventBridge**
-* Inventory captured as time-stamped JSON in **Amazon S3**
-* Resources inventoried:
-
-  * EC2 instances
-  * EBS volumes
-  * EBS snapshots
-  * IAM users
+No servers. No cron jobs. No manual execution.
 
 ---
 
-### Phase 2 – Cost & Hygiene Automation ✅
+## What’s Implemented
 
-Extended the control plane to proactively detect **cost-leaking resources**:
+### Phase 1 — Governance & Inventory ✅
 
-* **Orphaned EBS volumes**
+This phase establishes a strong operational foundation:
 
-  * Volumes in `available` state (unattached)
-* **Aged EBS snapshots**
+* Terraform-managed AWS infrastructure with remote state and locking
+* IAM + STS assume-role model (no long-lived credentials)
+* Scheduled inventory collection using Lambda and EventBridge
+* Inventory stored as time-stamped JSON in Amazon S3
+
+**Resources inventoried:**
+
+* EC2 instances
+* EBS volumes
+* EBS snapshots
+* IAM users
+
+---
+
+### Phase 2 — Cost & Hygiene Automation ✅
+
+This phase focuses on **real-world cost hygiene**:
+
+* **Orphaned EBS volume detection**
+
+  * Volumes not attached to any EC2 instance
+* **Aged snapshot detection**
 
   * Snapshots older than 30 days
 
-📌 Design principles:
+**Design choice:**
 
-* Detection only (no auto-deletion)
-* Fully auditable outputs
-* Safe-by-default automation
+* Detection-only (no auto-deletion)
+* All findings are written to S3 for auditability
 
-Reports are written to S3 for historical analysis and future automation.
+This mirrors how production teams approach automation: **observe first, remediate later**.
 
 ---
 
@@ -95,18 +94,16 @@ Reports are written to S3 for historical analysis and future automation.
 
 ```
 cloud-operations-control-plane/
-├── terraform/               # Infrastructure as Code
-│   └── envs/dev/
-├── lambdas/                 # Serverless automation logic
-├── scripts/                 # Local helper scripts
-├── trust-policy.json        # IAM trust relationship
-├── .gitignore
+├── terraform/        # Infrastructure as Code
+├── lambdas/          # Serverless automation logic
+├── scripts/          # Local helper scripts
+├── trust-policy.json # IAM trust relationship
 └── README.md
 ```
 
 ---
 
-## Tools & Technologies
+## Technologies Used
 
 * AWS Lambda
 * Amazon EventBridge
@@ -114,7 +111,7 @@ cloud-operations-control-plane/
 * AWS IAM & STS
 * Terraform
 * Python (boto3)
-* Amazon CloudWatch Logs
+* CloudWatch Logs
 
 ---
 
@@ -122,19 +119,19 @@ cloud-operations-control-plane/
 
 This project demonstrates:
 
-* Platform engineering mindset
-* Governance-first cloud automation
-* Cost awareness and hygiene
+* CloudOps / Platform Engineering mindset
+* Governance-first automation
+* Cost awareness and operational hygiene
 * Safe, production-oriented design
-* Real-world Terraform and AWS workflows
+* Practical Terraform and AWS workflows
 
-It focuses on **operability and reliability**, not application features.
+The emphasis is on **operability**, not application features.
 
 ---
 
 ## Resume / Interview Summary
 
-> Designed and implemented a Cloud Operations Control Plane using Terraform and AWS serverless services to automate resource inventory and proactively detect cost-leaking resources through scheduled, auditable hygiene automation.
+> Designed and implemented a Cloud Operations Control Plane using Terraform and AWS serverless services to automate AWS inventory and proactively detect cost-leaking resources through scheduled, auditable hygiene checks.
 
 ---
 
@@ -142,6 +139,6 @@ It focuses on **operability and reliability**, not application features.
 
 ✅ **Intentionally complete at Phase 2**
 
-This project is deliberately scoped to demonstrate core **CloudOps and Platform Engineering** skills without over-engineering. Future extensions are possible but not required.
+The scope is deliberate: the project demonstrates how real CloudOps platforms are designed and operated without unnecessary complexity.
 
 ---
