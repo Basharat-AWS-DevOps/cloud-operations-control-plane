@@ -1,120 +1,120 @@
-# Cloud Operations Control Plane (Flagship Project)
+# Cloud Operations Control Plane
 
-## Repository Structure
+> **Flagship CloudOps / Platform Engineering Project**
 
-- `terraform/` – Infrastructure as Code (AWS resources, IAM, backend)
-- `lambdas/` – Automation logic (inventory collection)
-- `scripts/` – Helper scripts for local setup
-
+---
 
 ## Overview
 
-The **Cloud Operations Control Plane** is an internal platform-style system designed to improve **governance, operational hygiene, automation, and visibility** across AWS infrastructure. It mirrors how real CloudOps / Platform Engineering teams build lightweight but powerful internal tooling.
+The **Cloud Operations Control Plane** is an internal, platform-style system built on AWS to improve **governance, operational hygiene, cost control, and visibility** across cloud infrastructure.
 
-This project is intentionally not an application. It is an **operations platform**.
+This project mirrors how **real CloudOps and Platform Engineering teams** build lightweight internal tooling to manage growing AWS environments.
+
+🔹 This is **not an application**.
+🔹 It is an **operations platform**.
+
+---
+
+## What Problem This Solves
+
+As AWS environments scale, teams commonly face:
+
+* Lack of visibility into deployed resources
+* Orphaned resources causing silent cost leaks
+* Manual, reactive operational workflows
+* Weak governance and auditability
+
+This control plane provides a **safe, automated foundation** to address these problems.
 
 ---
 
 ## High-Level Architecture
 
 ```
-+---------------------+
-|   AWS EventBridge   |
-|  (Scheduled Rules) |
-+----------+----------+
-           |
-           v
-+---------------------+        IAM (Least Privilege)
-| AWS Lambda          |-----------------------------------+
-| Inventory Collector |                                   |
-| (Python)            |                                   |
-+----------+----------+                                   |
-           |                                              |
-           v                                              v
-+---------------------------+          +-------------------------+
-| Amazon S3                 |          | AWS APIs                |
-| Inventory Bucket          |          | - EC2                   |
-| (Versioned, Private)      |          | - EBS / Snapshots       |
-|                           |          | - IAM                   |
-+---------------------------+          +-------------------------+
-           |
-           v
-+---------------------------+
-| Downstream Consumers      |
-| (Future Phases)           |
-| - Governance checks       |
-| - Dashboards              |
-| - Alerts & Automation     |
-+---------------------------+
+EventBridge (Schedule)
+        │
+        ▼
+AWS Lambda (Inventory & Hygiene)
+        │   IAM (Least Privilege)
+        ▼
+Amazon S3 (Versioned Reports)
+        │
+        ▼
+Future Consumers
+(Governance, Cost, Dashboards, Alerts)
 ```
+
+**Key design choices:**
+
+* Fully serverless (no EC2, no cron)
+* Least-privilege IAM
+* Read-only, detection-first automation
+* Durable, auditable S3 storage
 
 ---
 
-## What Is Implemented (Phase 1 – COMPLETE)
+## What Is Implemented
 
-### 1. Identity & Access Foundation
+### Phase 1 – Governance & Inventory ✅
 
-* AWS IAM user → role assumption using STS
-* Dedicated **CloudOps Admin role**
-* Least-privilege IAM policies
-* WSL-based isolated execution environment
+* Terraform-based AWS foundation with remote state & locking
+* IAM + STS assume-role access model
+* Scheduled inventory collection using **Lambda + EventBridge**
+* Inventory captured as time-stamped JSON in **Amazon S3**
+* Resources inventoried:
 
-### 2. Terraform Foundation
+  * EC2 instances
+  * EBS volumes
+  * EBS snapshots
+  * IAM users
 
-* Remote Terraform state stored in S3
-* State locking enabled
-* Backend and provider separated
-* No local state or embedded credentials
+---
 
-### 3. Governance & Inventory (Core Pillar)
+### Phase 2 – Cost & Hygiene Automation ✅
 
-* Terraform-managed S3 inventory bucket
+Extended the control plane to proactively detect **cost-leaking resources**:
 
-  * Versioning enabled
-  * Public access blocked
-  * Governance tags applied
-* Inventory Lambda (Python):
+* **Orphaned EBS volumes**
 
-  * Collects EC2 instance counts
-  * Collects EBS volume counts
-  * Collects snapshot counts
-  * Collects IAM user counts
-* Inventory written as JSON to S3
-* EventBridge schedule for automated execution
+  * Volumes in `available` state (unattached)
+* **Aged EBS snapshots**
+
+  * Snapshots older than 30 days
+
+📌 Design principles:
+
+* Detection only (no auto-deletion)
+* Fully auditable outputs
+* Safe-by-default automation
+
+Reports are written to S3 for historical analysis and future automation.
+
+---
+
+## Repository Structure
+
+```
+cloud-operations-control-plane/
+├── terraform/               # Infrastructure as Code
+│   └── envs/dev/
+├── lambdas/                 # Serverless automation logic
+├── scripts/                 # Local helper scripts
+├── trust-policy.json        # IAM trust relationship
+├── .gitignore
+└── README.md
+```
 
 ---
 
 ## Tools & Technologies
 
 * AWS Lambda
-* Amazon S3
 * Amazon EventBridge
+* Amazon S3
 * AWS IAM & STS
 * Terraform
 * Python (boto3)
-* CloudWatch Logs
-
----
-
-## Project Structure
-
-```
-Project01-CLOUD-OPS-CP/
-├── terraform/
-│   └── envs/dev/
-│       ├── backend.tf
-│       ├── provider.tf
-│       ├── inventory.tf
-│       ├── iam_inventory.tf
-│       └── lambda_inventory.tf
-├── lambdas/
-│   ├── inventory_collector.py
-│   └── inventory_collector.zip
-├── docs/
-├── dashboards/
-├── runbooks/
-└── README.md
-```
+* Amazon CloudWatch Logs
 
 ---
 
@@ -122,44 +122,28 @@ Project01-CLOUD-OPS-CP/
 
 This project demonstrates:
 
-* Platform engineering thinking
-* Governance-first automation
-* Safe infrastructure practices
-* Real-world AWS and Terraform workflows
+* Platform engineering mindset
+* Governance-first cloud automation
+* Cost awareness and hygiene
+* Safe, production-oriented design
+* Real-world Terraform and AWS workflows
 
-It intentionally focuses on **operability**, not application features.
-
----
-
-## Resume Summary
-
-> Designed and implemented a cloud operations control plane using Terraform, AWS Lambda, IAM, EventBridge, and S3 to automate AWS resource inventory, enforce governance, and provide operational visibility.
+It focuses on **operability and reliability**, not application features.
 
 ---
 
-## Roadmap (Next Phases)
+## Resume / Interview Summary
 
-### Phase 2 – Automation Engine
-
-* Orphaned EBS and snapshot detection
-* EC2 stop/start scheduling
-* Snapshot cleanup automation
-
-### Phase 3 – Visibility
-
-* CloudWatch dashboards
-* Inventory trend analysis
-* Automation success/failure metrics
-
-### Phase 4 – Incident Hooks
-
-* IAM privilege change alerts
-* Resource threshold alerts
-* Event-driven notifications
+> Designed and implemented a Cloud Operations Control Plane using Terraform and AWS serverless services to automate resource inventory and proactively detect cost-leaking resources through scheduled, auditable hygiene automation.
 
 ---
 
-## Status
+## Project Status
 
-**Phase 1 (Governance & Inventory): COMPLETE ✅**
+✅ **Intentionally complete at Phase 2**
 
+This project is deliberately scoped to demonstrate core **CloudOps and Platform Engineering** skills without over-engineering. Future extensions are possible but not required.
+
+---
+
+🔗 **LinkedIn-ready | Recruiter-friendly | Interview-safe**
