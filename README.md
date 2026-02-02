@@ -1,5 +1,12 @@
 # Cloud Operations Control Plane (Flagship Project)
 
+## Repository Structure
+
+- `terraform/` – Infrastructure as Code (AWS resources, IAM, backend)
+- `lambdas/` – Automation logic (inventory collection)
+- `scripts/` – Helper scripts for local setup
+
+
 ## Overview
 
 The **Cloud Operations Control Plane** is an internal platform-style system designed to improve **governance, operational hygiene, automation, and visibility** across AWS infrastructure. It mirrors how real CloudOps / Platform Engineering teams build lightweight but powerful internal tooling.
