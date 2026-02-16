@@ -14,3 +14,19 @@ __pycache__/
 .vscode/
 .idea/
 
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.out
+*.plan
+plan.out
+plan.txt
+
+# Local test files
+tfplan
+tfplan.txt
+
+# Keys
+*.pem
